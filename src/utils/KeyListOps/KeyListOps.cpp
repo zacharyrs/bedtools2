@@ -14,7 +14,10 @@ KeyListOps::KeyListOps():
 _dbFileType(FileRecordTypeChecker::UNKNOWN_FILE_TYPE)
 {
 	_opCodes["sum"] = SUM;
+	_opCodes["weight_sum"] = WEIGHT_SUM;
+	_opCodes["total_overlap"] = TOTAL_OVERLAP;
 	_opCodes["mean"] = MEAN;
+	_opCodes["weight_mean"] = WEIGHT_MEAN;
 	_opCodes["stdev"] = STDDEV;
 	_opCodes["sstdev"] = SAMPLE_STDDEV;
 	_opCodes["median"] = MEDIAN;
@@ -32,6 +35,7 @@ _dbFileType(FileRecordTypeChecker::UNKNOWN_FILE_TYPE)
 	_opCodes["distinct_sort_num_desc"] = DISTINCT_SORT_NUM_DESC;
 
 	_opCodes["collapse"] = COLLAPSE;
+	_opCodes["overlaps"] = OVERLAPS;
 	_opCodes["concat"] = CONCAT;
 	_opCodes["freqasc"] = FREQ_ASC;
 	_opCodes["freqdesc"] = FREQ_DESC;
@@ -39,7 +43,10 @@ _dbFileType(FileRecordTypeChecker::UNKNOWN_FILE_TYPE)
 	_opCodes["last"] = LAST;
 
 	_isNumericOp[SUM] = true;
+	_isNumericOp[WEIGHT_SUM] = true;
+	_isNumericOp[TOTAL_OVERLAP] = true;
 	_isNumericOp[MEAN] = true;
+	_isNumericOp[WEIGHT_MEAN] = true;
 	_isNumericOp[STDDEV] = true;
 	_isNumericOp[MEDIAN] = true;
 	_isNumericOp[MODE] = false;
@@ -52,6 +59,7 @@ _dbFileType(FileRecordTypeChecker::UNKNOWN_FILE_TYPE)
 	_isNumericOp[COUNT_DISTINCT] = false;
 	_isNumericOp[DISTINCT_ONLY] = false;
 	_isNumericOp[COLLAPSE] = false;
+	_isNumericOp[OVERLAPS] = false;
 	_isNumericOp[CONCAT] = false;
 	_isNumericOp[FREQ_ASC] = false;
 	_isNumericOp[FREQ_DESC] = false;
@@ -183,8 +191,35 @@ const string & KeyListOps::getOpVals(RecordKeyVector &hits)
 			}
 			break;
 
+		case WEIGHT_SUM:
+			val = _methods.getWeightedSum();
+			if (std::isnan(val)) {
+				s << _methods.getNullValue();
+			} else {
+				s << format(val);
+			}
+			break;
+
+		case TOTAL_OVERLAP:
+			val = _methods.getTotalOverlap();
+			if (std::isnan(val)) {
+				s << _methods.getNullValue();
+			} else {
+				s << format(val);
+			}
+			break;
+
 		case MEAN:
 			val = _methods.getMean();
+			if (std::isnan(val)) {
+				s << _methods.getNullValue();
+			} else {
+				s << format(val);
+			}
+			break;
+
+		case WEIGHT_MEAN:
+			val = _methods.getWeightedMean();
 			if (std::isnan(val)) {
 				s << _methods.getNullValue();
 			} else {
@@ -291,6 +326,10 @@ const string & KeyListOps::getOpVals(RecordKeyVector &hits)
 			s << _methods.getCollapse();
 			break;
 
+		case OVERLAPS:
+			s << _methods.getOverlaps();
+			break;
+
 		case CONCAT:
 			s << _methods.getConcat();
 			break;
@@ -351,6 +390,7 @@ void KeyListOpsHelp() {
     cerr                         << "\t\tValid operations:" << endl;
     cerr                         << "\t\t    sum, min, max, absmin, absmax," << endl;
     cerr                         << "\t\t    mean, median, mode, antimode" << endl;
+    cerr                         << "\t\t    weight_sum" << endl;
     cerr                         << "\t\t    stdev, sstdev" << endl;
     cerr                         << "\t\t    collapse (i.e., print a delimited list (duplicates allowed)), " << endl;
     cerr                         << "\t\t    distinct (i.e., print a delimited list (NO duplicates allowed)), " << endl;

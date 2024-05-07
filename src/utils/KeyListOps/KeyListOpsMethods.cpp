@@ -47,11 +47,45 @@ double KeyListOpsMethods::getSum() {
 	return theSum;
 }
 
+// return the total of the values in the vector, weighted by base pair overlap count
+double KeyListOpsMethods::getWeightedSum() {
+	if (empty()) return NAN;
+
+	double theSum = 0.0;
+	for (begin(); !end(); next()) {
+		theSum += getColValNum() * getOverlap();
+	}
+
+	return theSum;
+}
+
+// return the total overlap in base pairs
+CHRPOS KeyListOpsMethods::getTotalOverlap() {
+	if (empty()) return NAN;
+
+	CHRPOS theOverlap = 0;
+	for (begin(); !end(); next()) {
+		theOverlap += getOverlap();
+	}
+
+	return theOverlap;
+}
+
 // return the average value in the vector
 double KeyListOpsMethods::getMean() {
 	if (empty()) return NAN;
 
 	return getSum() / (float)getCount();
+}
+
+// return the average value in the vector, weighted proportion of bin overlap
+double KeyListOpsMethods::getWeightedMean() {
+	if (empty()) return NAN;
+
+	const CHRPOS startPosBin = _keyList->getKey()->getStartPos();
+	const CHRPOS endPosBin = _keyList->getKey()->getEndPos();
+
+	return getWeightedSum() / (double)(endPosBin - startPosBin);
 }
 
 
@@ -257,6 +291,21 @@ const string &KeyListOpsMethods::getCollapse(const string &delimiter) {
 	return _retStr;
 }
 
+// return a delimiter-separated list of overlaps
+const string &KeyListOpsMethods::getOverlaps(const string &delimiter) {
+	if (empty()) return _nullVal;
+
+	//just put all items in one big separated list.
+	_retStr.clear();
+	int i=0;
+	for (begin(); !end(); next()) {
+		if (i > 0) _retStr += _delimStr;
+		_retStr.append(std::to_string(getOverlap()));
+		i++;
+	}
+	return _retStr;
+}
+
 // return a concatenation of all elements in the vector
 const string &KeyListOpsMethods::getConcat() {
 	if (empty()) return _nullVal;
@@ -358,6 +407,21 @@ double KeyListOpsMethods::getColValNum() {
 		return NAN;
 	}
 	return atof(strVal.c_str());
+}
+
+CHRPOS KeyListOpsMethods::getOverlap() {
+	const CHRPOS startPosPeak = (*_iter)->getStartPos();
+	const CHRPOS endPosPeak = (*_iter)->getEndPos();
+
+	const CHRPOS startPosBin = _keyList->getKey()->getStartPos();
+	const CHRPOS endPosBin = _keyList->getKey()->getEndPos();
+
+	const CHRPOS overlap =
+			max(min(endPosPeak, endPosBin) - max(startPosPeak, startPosBin) +
+							(CHRPOS)1,
+					(CHRPOS)0);
+
+	return overlap;
 }
 
 void KeyListOpsMethods::toArray(bool useNum, SORT_TYPE sortVal) {

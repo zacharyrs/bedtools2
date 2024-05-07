@@ -32,8 +32,14 @@ public:
 
     // return the total of the values in the vector
     double getSum();
+    // return the total of the values in the vector, weighted by overlap
+    double getWeightedSum();
+    // return the total overlap in base pairs
+    CHRPOS getTotalOverlap();
     // return the average value in the vector
     double getMean();
+    // return the average value in the vector, weighted proportion of bin overlap
+    double getWeightedMean();
      // return the standard deviation
     double getStddev();
     // return the sample standard deviation
@@ -65,6 +71,8 @@ public:
 
      // return a delimiter-separated list of elements
     const string & getCollapse(const string & delimiter = ",");
+     // return a delimiter-separated list of overlaps
+    const string & getOverlaps(const string & delimiter = ",");
     // return a concatenation of all elements in the vector
     const string & getConcat();
     // return a comma-separated list of the _unique_ elements
@@ -114,6 +122,7 @@ private:
 	void init();
 	const string &getColVal();
 	double getColValNum();
+	CHRPOS getOverlap();
 	bool empty() { return _keyList->empty(); }
 	void begin() { _iter = _keyList->begin(); }
 	bool end() { return _iter == _keyList->end(); }
